@@ -1,16 +1,47 @@
 package ru.maxx52
 
 import java.io.File
+import java.lang.NumberFormatException
 
 fun main() {
+    val dictionary: MutableList<Word> = mutableListOf()
+
+    while (true) {
+        println("Меню:")
+        println("1 - Учить слова")
+        println("2 - Статистика")
+        println("0 - Выход")
+
+        try {
+            val inputMenu = readln().toInt()
+            when(inputMenu) {
+                1 -> {
+                    println("Выбран пункт меню \"Учить слова\"")
+                }
+                2 -> {
+                    println("Выбран пункт меню \"Статистика\"")
+                }
+                0 -> {
+                    println("Выход из программы")
+                    return
+                }
+                else -> {
+                    println("Введите число 1, 2 или 0")
+                }
+            }
+        } catch (e: NumberFormatException) {
+            println("Введите число 1, 2 или 0")
+        }
+    }
+}
+
+fun loadDictionary(dictionary: MutableList<Word>) {
     val wordsFile = File("words.txt")
 
     if (!wordsFile.exists()) {
         println("Файл не найден: ${wordsFile.absolutePath}")
         return
     }
-
-    val dictionary: MutableList<Word> = mutableListOf()
 
     val lines: List<String> = wordsFile.readLines()
     for (line in lines) {
@@ -26,8 +57,14 @@ fun main() {
             println("Пропуск строки: '$line' (неправильный формат)")
         }
     }
+}
 
-    dictionary.forEachIndexed { index, word ->
-        println("${index + 1}. $word")
+fun statistics(dictionary: List<Word>) {
+    if (dictionary.isEmpty()) {
+        println("Словарь пуст.")
+    } else {
+        dictionary.forEachIndexed { index, word ->
+            println("${index + 1}. $word")
+        }
     }
 }
