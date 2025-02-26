@@ -5,11 +5,8 @@ import java.lang.NumberFormatException
 
 fun main() {
     val dictionary: MutableList<Word> = mutableListOf()
-    val notLearnedList: MutableList<Word> = mutableListOf()
 
     loadDictionary(dictionary)
-
-    notLearnedList.addAll(dictionary)
 
     while (true) {
         println("Меню:")
@@ -22,11 +19,15 @@ fun main() {
             when (inputMenu) {
                 1 -> {
                     println("Выбран пункт меню \"Учить слова\"")
+
+                    val notLearnedList: MutableList<Word> = mutableListOf()
+                    notLearnedList.addAll(dictionary)
+
                     if (notLearnedList.isEmpty()) {
                         println("Все слова в словаре выучены")
                         continue
                     } else {
-                        val questionWords = notLearnedList.shuffled().take(4)
+                        val questionWords = notLearnedList.shuffled().take(COUNT_OF_WORDS)
                         questionWords.forEachIndexed { index, word ->
                             println("${index + 1} - ${word.translate}")
                         }
@@ -36,7 +37,7 @@ fun main() {
                 }
                 2 -> {
                     println("Выбран пункт меню \"Статистика\"")
-                    statistics(dictionary)
+                    getStatistic(dictionary)
                 }
                 0 -> {
                     println("Выход из программы")
@@ -77,7 +78,7 @@ fun loadDictionary(dictionary: MutableList<Word>): Int {
     return correctAnswersCount
 }
 
-fun statistics(dictionary: List<Word>) {
+fun getStatistic(dictionary: List<Word>) {
     val totalCount = dictionary.size
     val learnedCount = dictionary.filter { it.correctAnswersCount >= 3 }
 
@@ -91,3 +92,5 @@ fun statistics(dictionary: List<Word>) {
         println("Выучено ${learnedCount.size} из $totalCount слов | $percent%")
     }
 }
+
+const val COUNT_OF_WORDS = 4
