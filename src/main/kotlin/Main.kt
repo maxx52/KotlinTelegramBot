@@ -6,6 +6,8 @@ import java.lang.NumberFormatException
 fun main() {
     val dictionary: MutableList<Word> = mutableListOf()
 
+    loadDictionary(dictionary)
+
     while (true) {
         println("Меню:")
         println("1 - Учить слова")
@@ -14,14 +16,28 @@ fun main() {
 
         try {
             val inputMenu = readln().toInt()
-            when(inputMenu) {
+            when (inputMenu) {
                 1 -> {
                     println("Выбран пункт меню \"Учить слова\"")
+
+                    val notLearnedList: MutableList<Word> = mutableListOf()
+                    notLearnedList.addAll(dictionary)
+
+                    if (notLearnedList.isEmpty()) {
+                        println("Все слова в словаре выучены")
+                        continue
+                    } else {
+                        val questionWords = notLearnedList.shuffled().take(COUNT_OF_WORDS)
+                        questionWords.forEachIndexed { index, word ->
+                            println("${index + 1} - ${word.translate}")
+                        }
+
+                        val answerInput = readln().toIntOrNull()
+                    }
                 }
                 2 -> {
                     println("Выбран пункт меню \"Статистика\"")
-                    loadDictionary(dictionary)
-                    statistics(dictionary)
+                    getStatistic(dictionary)
                 }
                 0 -> {
                     println("Выход из программы")
@@ -42,13 +58,13 @@ fun loadDictionary(dictionary: MutableList<Word>): Int {
 
     if (!wordsFile.exists()) {
         println("Файл не найден: ${wordsFile.absolutePath}")
+        return 0
     }
 
     var correctAnswersCount = 0
     val lines: List<String> = wordsFile.readLines()
     for (line in lines) {
         val parts = line.split("|")
-
         if (parts.size >= 2) {
             val original = parts[0].trim()
             val translate = parts[1].trim()
@@ -62,19 +78,19 @@ fun loadDictionary(dictionary: MutableList<Word>): Int {
     return correctAnswersCount
 }
 
-fun statistics(dictionary: List<Word>) {
-    var totalCount = 0
+fun getStatistic(dictionary: List<Word>) {
+    val totalCount = dictionary.size
     val learnedCount = dictionary.filter { it.correctAnswersCount >= 3 }
 
-    if (dictionary.isEmpty()) {
+    if (totalCount == 0) {
         println("Словарь пуст.")
     } else {
         dictionary.forEachIndexed { index, word ->
-            totalCount++
             println("${index + 1}. $word")
         }
-        val percent = learnedCount.size / totalCount * 100
-
+        val percent = (learnedCount.size.toDouble() / totalCount * 100).toInt()
         println("Выучено ${learnedCount.size} из $totalCount слов | $percent%")
     }
 }
+
+const val COUNT_OF_WORDS = 4
