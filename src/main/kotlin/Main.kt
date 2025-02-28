@@ -15,7 +15,7 @@ fun main() {
         println("0 - Выход")
 
         try {
-            val inputMenu = readln().toInt()
+            val inputMenu = getUserInput()
             when (inputMenu) {
                 1 -> {
                     println("Выбран пункт меню \"Учить слова\"")
@@ -28,11 +28,28 @@ fun main() {
                         continue
                     } else {
                         val questionWords = notLearnedList.shuffled().take(COUNT_OF_WORDS)
+                        val correctAnswerIndex = questionWords.indices.random()
+                        val correctWord = questionWords[correctAnswerIndex]
+
+                        println("${correctWord.original}:")
+
                         questionWords.forEachIndexed { index, word ->
                             println("${index + 1} - ${word.translate}")
                         }
 
-                        val answerInput = readln().toIntOrNull()
+                        println("-------------")
+                        println("0 - Меню")
+
+                        val userAnswerInput = readln().toIntOrNull()
+                        if (userAnswerInput == 0) continue
+
+                        if (userAnswerInput == correctAnswerIndex + 1) {
+                            println("Правильно!")
+                            correctWord.incrementCorrectCount()
+                            saveDictionary(dictionary)
+                        } else {
+                            println("Неправильно! ${correctWord.original} - это ${correctWord.translate}")
+                        }
                     }
                 }
                 2 -> {
@@ -91,6 +108,21 @@ fun getStatistic(dictionary: List<Word>) {
         val percent = (learnedCount.size.toDouble() / totalCount * 100).toInt()
         println("Выучено ${learnedCount.size} из $totalCount слов | $percent%")
     }
+}
+
+fun getUserInput(prompt: String = "Ваш ответ:"): Int? {
+    println(prompt)
+    return readln().toIntOrNull()
+}
+
+fun saveDictionary(dictionary: List<Word>) {
+    val wordsFile = File("words.txt")
+    wordsFile.printWriter().use { out ->
+        for (word in dictionary) {
+            out.println("${word.original}|${word.translate}|${word.correctAnswersCount}")
+        }
+    }
+    println("Словарь успешно сохранён.")
 }
 
 const val COUNT_OF_WORDS = 4
