@@ -2,6 +2,8 @@ package ru.maxx52
 
 import java.io.File
 
+const val CORRECT_COUNTER = 3
+
 data class Statistics(
     val totalCount: Int,
     val learnedCount: List<Word>,
@@ -30,22 +32,21 @@ class LearnWordsTrainer {
 
     fun getStatistic() : Statistics {
         val totalCount = dictionary.size
-        val learnedCount = dictionary.filter { it.correctAnswersCount >= 3 }
+        val learnedCount = dictionary.filter { it.correctAnswersCount >= CORRECT_COUNTER }
         val percent: Int = learnedCount.size / totalCount * 100
         return Statistics(totalCount, learnedCount, percent)
     }
 
     fun getNextQuestion(): Question? {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount >= 3 }
+        val notLearnedList = dictionary.filter { it.correctAnswersCount < CORRECT_COUNTER }
         if (notLearnedList.isEmpty()) return null
-        val questionWords = notLearnedList.shuffled().take(COUNT_OF_WORDS)
-        val correctAnswer = questionWords.random()
         question = Question(
-            variants = questionWords,
-            correctAnswer = correctAnswer,
+            variants = notLearnedList.shuffled().take(COUNT_OF_WORDS),
+            correctAnswer = notLearnedList.random()
         )
         return question
     }
+
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
         return question?.let {
