@@ -14,10 +14,13 @@ fun Question.asConsoleString(): String {
     return this.correctAnswer.questionWord + "\n" + variants + "\n 0 - выйти в меню"
 }
 
-const val COUNT_OF_WORDS = 4
-
 fun main() {
-    val trainer = LearnWordsTrainer()
+    val trainer = try {
+        LearnWordsTrainer(3, 4)
+    } catch (e: Exception) {
+        println("Невозможно загрузить словарь")
+        return
+    }
 
     while (true) {
         println("Меню:")
@@ -26,8 +29,7 @@ fun main() {
         println("0 - Выход")
 
         try {
-            val inputMenu = getUserInput()
-            when (inputMenu) {
+            when (getUserInput()) {
                 1 -> {
                     val question = trainer.getNextQuestion()
                     println("Выбран пункт меню \"Учить слова\"")
@@ -40,7 +42,7 @@ fun main() {
                         println(question.asConsoleString())
 
                         val userAnswerInput = readln().toIntOrNull()
-                        if (userAnswerInput == 0) break
+                        if (userAnswerInput == 0) continue
 
                         if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
                             println("Правильно!\n")
@@ -53,7 +55,7 @@ fun main() {
                 2 -> {
                     println("Выбран пункт меню \"Статистика\"")
                     val statistics = trainer.getStatistic()
-                    println("Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}")
+                    println("Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent} %")
                 }
                 0 -> {
                     println("Выход из программы")
