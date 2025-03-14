@@ -1,36 +1,32 @@
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-
 fun main(args: Array<String>) {
-
     val botToken = args[0]
+    val service = TelegramBotService()
     var updateId = 0
-    val updateIdRegex = "\"update_id\":(.+?)".toRegex()
-    val messageTextRegex = "\"text\":\"(.+?)\"".toRegex()
 
     while (true) {
         Thread.sleep(2000)
-        val updates: String = getUpdates(botToken, updateId)
-        println(updates)
+        val updates: String = service.getUpdates(botToken, updateId)
+
+        val updateIdRegex = "\"update_id\":(\\d+)".toRegex()
+        val messageTextRegex = "\"text\":\"(.*?)\"".toRegex()
+        val chatIdRegex = "\"chat\":\\{\"id\":(\\d+)".toRegex()
 
         val updateResult = updateIdRegex.find(updates)
-        val groupsOfUpdate = updateResult?.groups
-        val updateIdString = groupsOfUpdate?.get(1)?.value
-        updateId = updateIdString?.toInt()?.plus(1) ?: continue
+        if (updateResult != null) {
+            updateId = updateResult.groups[1]?.value?.toInt() ?: updateId
+        }
 
-        val matchResult = messageTextRegex.find(updates)
-        val groups = matchResult?.groups
-        val text = groups?.get(1)?.value
-        println(text)
+        val messageMatch = messageTextRegex.find(updates)
+        val chatIdMatch = chatIdRegex.find(updates)
+
+        if (messageMatch != null && chatIdMatch != null) {
+            val text = messageMatch.groups[1]?.value
+            val chatId = chatIdMatch.groups[1]?.value?.toLongOrNull()
+
+            if (text != null && chatId != null) {
+                println("Received message: $text")
+                service.sendMessage(botToken, chatId, text)
+            }
+        }
     }
-}
-
-fun getUpdates(botToken: String, updateId: Int): String {
-    val client = HttpClient.newBuilder().build()
-    val urlGetUpdates = "https://api.telegram.org/bot$botToken/getUpdates?offset=$updateId"
-    val update = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
-    val response = client.send(update, HttpResponse.BodyHandlers.ofString())
-    return response.body()
 }
