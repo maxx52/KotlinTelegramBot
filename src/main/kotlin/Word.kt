@@ -1,5 +1,3 @@
-package ru.maxx52
-
 data class Word(
     val questionWord: String,
     val translate: String,

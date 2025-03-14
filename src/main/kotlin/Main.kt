@@ -1,5 +1,3 @@
-package ru.maxx52
-
 import java.lang.NumberFormatException
 
 fun getUserInput(prompt: String = "Ваш ответ:"): Int? {
