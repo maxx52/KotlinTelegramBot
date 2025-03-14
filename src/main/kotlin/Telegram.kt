@@ -1,11 +1,11 @@
 fun main(args: Array<String>) {
     val botToken = args[0]
-    val service = TelegramBotService()
+    val service = TelegramBotService(botToken)
     var updateId = 0
 
     while (true) {
         Thread.sleep(2000)
-        val updates: String = service.getUpdates(botToken, updateId)
+        val updates: String = service.getUpdates(updateId)
 
         val updateIdRegex = "\"update_id\":(\\d+)".toRegex()
         val messageTextRegex = "\"text\":\"(.*?)\"".toRegex()
@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
 
             if (text != null && chatId != null) {
                 println("Received message: $text")
-                service.sendMessage(botToken, chatId, text)
+                service.sendMessage(chatId, text)
             }
         }
     }
