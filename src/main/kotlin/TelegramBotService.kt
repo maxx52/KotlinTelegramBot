@@ -10,12 +10,11 @@ class TelegramBotService(
     private val botToken: String,
     private val client: HttpClient? = HttpClient.newBuilder().build(),
 ) {
-    fun getUpdates(updateId: Int): String {
-        val client = HttpClient.newBuilder().build()
+    fun getUpdates(updateId: Int): String? {
         val urlGetUpdates = "$URL_API${this.botToken}/getUpdates?offset=$updateId"
         val update = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
-        val response = client.send(update, HttpResponse.BodyHandlers.ofString())
-        return response.body()
+        val response = client?.send(update, HttpResponse.BodyHandlers.ofString())
+        return response?.body()
     }
 
     fun sendMessage(chatId: Long, text: String): String? {

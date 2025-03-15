@@ -5,7 +5,7 @@ fun main(args: Array<String>) {
 
     while (true) {
         Thread.sleep(2000)
-        val updates: String = service.getUpdates(updateId)
+        val updates: String = service.getUpdates(updateId).toString()
 
         val updateIdRegex = "\"update_id\":(\\d+)".toRegex()
         val messageTextRegex = "\"text\":\"(.*?)\"".toRegex()
