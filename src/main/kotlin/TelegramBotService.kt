@@ -8,8 +8,9 @@ const val URL_API = "https://api.telegram.org/bot"
 
 class TelegramBotService(
     private val botToken: String,
-    private val client: HttpClient? = HttpClient.newBuilder().build(),
 ) {
+    private val client: HttpClient? = HttpClient.newBuilder().build()
+
     fun getUpdates(updateId: Int): String? {
         val urlGetUpdates = "$URL_API${this.botToken}/getUpdates?offset=$updateId"
         val update = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
