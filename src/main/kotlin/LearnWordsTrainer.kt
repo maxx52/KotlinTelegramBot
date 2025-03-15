@@ -11,6 +11,16 @@ data class Question(
     val correctAnswer: Word,
 )
 
+data class Word(
+    val questionWord: String,
+    val translate: String,
+    var correctAnswersCount: Int = 0,
+) {
+    fun incrementCorrectCount() {
+        correctAnswersCount++
+    }
+}
+
 class LearnWordsTrainer(
     private val learnedAnswerCount: Int = 3,
     private val countOfQuestionWords: Int = 4,
