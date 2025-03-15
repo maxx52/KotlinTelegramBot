@@ -1,5 +1,3 @@
-package ru.maxx52
-
 import java.io.File
 
 data class Statistics(
@@ -96,6 +94,5 @@ class LearnWordsTrainer(
         } catch (e: IndexOutOfBoundsException) {
             throw IllegalStateException("некорректный файл")
         }
-
     }
 }
