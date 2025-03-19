@@ -3,6 +3,7 @@ fun main(args: Array<String>) {
     val service = TelegramBotService(botToken)
     val trainer = LearnWordsTrainer()
     var updateId = 0
+
     val updateIdRegex = "\"update_id\":(\\d+)".toRegex()
     val messageTextRegex = "\"text\":\\s*\"(.*?)\"".toRegex()
     val chatIdRegex = "\"chat\":\\{\"id\":(\\d+)".toRegex()
@@ -23,20 +24,20 @@ fun main(args: Array<String>) {
 
         if (messageMatch != null && chatIdMatch != null) {
             val text = messageMatch.groups[1]?.value
-            val chatId = chatIdMatch.groups[1]?.value?.toLongOrNull()
+            val chatId = chatIdMatch.groups[1]?.value?.toLongOrNull() ?: continue
             val data = dataMatch?.groups?.get(1)?.value
 
-            if (text != null && chatId != null) {
+            if (text != null) {
                 println("Received message: $text")
                 service.sendMessage(chatId, text)
             }
 
-            if (text == "menu" && chatId != null) {
+            if (text == "menu") {
                 println("Received message: $text")
                 service.sendMenu(chatId)
             }
 
-            if (data == "statistics_clicked" && chatId != null) {
+            if (data == "statistics_clicked") {
                 println("Received message: $text")
                 service.sendMessage(chatId, "Выучено 10 из 10 слов | 100%")
             }

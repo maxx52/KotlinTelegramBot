@@ -14,7 +14,7 @@ fun Question.asConsoleString(): String {
 
 fun main() {
     val trainer = try {
-        LearnWordsTrainer(3, 4)
+        LearnWordsTrainer()
     } catch (e: Exception) {
         println("Невозможно загрузить словарь")
         return
