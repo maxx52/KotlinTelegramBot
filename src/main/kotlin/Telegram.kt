@@ -39,7 +39,8 @@ fun main(args: Array<String>) {
 
             if (data == "statistics_clicked") {
                 println("Received message: $text")
-                service.sendMessage(chatId, "Выучено 10 из 10 слов | 100%")
+                val statistics = trainer.getStatistics()
+                service.sendMessage(chatId, "Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%")
             }
         }
     }
