@@ -38,7 +38,7 @@ class LearnWordsTrainer(
         println("Словарь успешно сохранён.")
     }
 
-    fun getStatistic() : Statistics {
+    fun getStatistics() : Statistics {
         val totalCount = dictionary.size
         val learnedCount = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }
         val percent = learnedCount.size * 100 / totalCount

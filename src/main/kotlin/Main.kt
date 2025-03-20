@@ -52,7 +52,7 @@ fun main() {
                 }
                 2 -> {
                     println("Выбран пункт меню \"Статистика\"")
-                    val statistics = trainer.getStatistic()
+                    val statistics = trainer.getStatistics()
                     println("Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent} %")
                 }
                 0 -> {
