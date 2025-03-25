@@ -80,7 +80,7 @@ class TelegramBotService(
         }
     }
 
-    private fun sendQuestion(botService: TelegramBotService, chatId: Long, question: Question): String? {
+    internal fun sendQuestion(chatId: Long, question: Question): String? {
         val inlineKeyboard = question.variants.mapIndexed { index, option ->
             """
             {
@@ -112,19 +112,6 @@ class TelegramBotService(
         } catch (e: Exception) {
             println("Error sending menu: ${e.message}")
             null
-        }
-    }
-
-    fun checkNextQuestionAndSend(
-        trainer: LearnWordsTrainer,
-        telegramBotService: TelegramBotService,
-        chatId: Long,
-    ) {
-        val question = trainer.getNextQuestion()
-        if (question == null) {
-            telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
-        } else {
-            sendQuestion(telegramBotService, chatId, question)
         }
     }
 

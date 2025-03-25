@@ -45,11 +45,23 @@ fun main(args: Array<String>) {
 
             if (data == LEARN_WORDS) {
                 println("Received message: $text")
-                val botService = TelegramBotService(botToken)
                 if (text != null) {
-                    service.checkNextQuestionAndSend(trainer, botService, chatId)
+                    checkNextQuestionAndSend(trainer, service, chatId)
                 }
             }
         }
+    }
+}
+
+fun checkNextQuestionAndSend(
+    trainer: LearnWordsTrainer,
+    telegramBotService: TelegramBotService,
+    chatId: Long,
+) {
+    val question = trainer.getNextQuestion()
+    if (question == null) {
+        telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
+    } else {
+        telegramBotService.sendQuestion(chatId, question)
     }
 }
