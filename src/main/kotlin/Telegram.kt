@@ -37,11 +37,31 @@ fun main(args: Array<String>) {
                 service.sendMenu(chatId)
             }
 
-            if (data == "statistics_clicked") {
+            if (data == STAT_CLICKED) {
                 println("Received message: $text")
                 val statistics = trainer.getStatistics()
                 service.sendMessage(chatId, "Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%")
             }
+
+            if (data == LEARN_WORDS) {
+                println("Received message: $text")
+                if (text != null) {
+                    checkNextQuestionAndSend(trainer, service, chatId)
+                }
+            }
         }
+    }
+}
+
+fun checkNextQuestionAndSend(
+    trainer: LearnWordsTrainer,
+    telegramBotService: TelegramBotService,
+    chatId: Long,
+) {
+    val question = trainer.getNextQuestion()
+    if (question == null) {
+        telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
+    } else {
+        telegramBotService.sendQuestion(chatId, question)
     }
 }
