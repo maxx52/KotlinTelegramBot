@@ -1,3 +1,5 @@
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -10,9 +12,55 @@ const val LEARN_WORDS = "learn_words_clicked"
 const val STAT_CLICKED = "statistics_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 
-class TelegramBotService(
-    private val botToken: String,
-) {
+@Serializable
+data class TelegramUpdates(
+    val ok: Boolean,
+    val result: List<Update>
+)
+
+@Serializable
+data class Update(
+    @SerialName("update_id") val updateId: Int,
+    val message: Message? = null,
+    @SerialName("callback_query") val callbackQuery: CallbackQuery? = null
+)
+
+@Serializable
+data class Message(
+    @SerialName("message_id") val messageId: Int,
+    val from: User,
+    val chat: Chat,
+    val date: Int,
+    val text: String? = null
+)
+
+@Serializable
+data class CallbackQuery(
+    val id: String,
+    val from: User,
+    val message: Message? = null,
+    val data: String,
+)
+
+@Serializable
+data class User(
+    @SerialName("id") val id: Long,
+    @SerialName("is_bot") val isBot: Boolean,
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String? = null,
+    @SerialName("username") val username: String? = null,
+    @SerialName("language_code") val languageCode: String? = null
+)
+
+@Serializable
+data class Chat(
+    val id: Long,
+    @SerialName("first_name") val firstName: String,
+    val username: String? = null,
+    val type: String
+)
+
+class TelegramBotService(private val botToken: String) {
     private val client: HttpClient = HttpClient.newBuilder().build()
     private val urlSendMessage = "$URL_API$botToken/sendMessage"
 
@@ -31,8 +79,8 @@ class TelegramBotService(
 
     fun sendMessage(chatId: Long, text: String): String? {
         val encodedText = URLEncoder.encode(text, "UTF-8")
-        val urlSendMessage = "$URL_API$botToken/sendMessage?chat_id=$chatId&text=$encodedText"
-        val messageRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage)).build()
+        val urlSendMessageWithParams = "$URL_API$botToken/sendMessage?chat_id=$chatId&text=$encodedText"
+        val messageRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessageWithParams)).build()
 
         return try {
             val response = client.send(messageRequest, BodyHandlers.ofString())
