@@ -23,12 +23,12 @@ fun main(args: Array<String>) {
         val telegramUpdates = json.decodeFromString<TelegramUpdates>(updates)
 
         for (update in telegramUpdates.result) {
-            val chatId = update.message?.chat?.id
-            val text = update.message?.text
+            val chatId = update.message?.chat?.id ?: continue
+            val text = update.message.text
             val data = update.callbackQuery?.data
 
             // Обработка текстового сообщения
-            if (chatId != null && text != null) {
+            if (text != null) {
                 println("Received message: $text")
                 if (text == "menu") {
                     println("Menu command received.")
@@ -43,7 +43,7 @@ fun main(args: Array<String>) {
 
         val updateResult = updateIdRegex.find(updates)
         if (updateResult != null) {
-            updateId = updateResult.groups[1]?.value?.toInt() ?: updateId
+            updateId = (updateResult.groups[1]?.value?.toInt()?.plus(1)) ?: 0
         }
     }
 }
