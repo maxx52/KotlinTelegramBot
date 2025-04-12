@@ -1,47 +1,51 @@
-import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.net.http.HttpResponse.BodyHandlers
+import io.ktor.client.HttpClient
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.request.*
+import io.ktor.http.*
 
 const val URL_API = "https://api.telegram.org/bot"
 const val LEARN_WORDS = "learn_words_clicked"
 const val STAT_CLICKED = "statistics_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 
+val json = Json { ignoreUnknownKeys = true }
+
 class TelegramBotService(private val botToken: String) {
-    private val client: HttpClient = HttpClient.newBuilder().build()
+    private val client = HttpClient {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer()
+        }
+    }
     private val urlSendMessage = "$URL_API$botToken/sendMessage"
 
-    fun getUpdates(updateId: Long): String? {
-        val urlGetUpdates = "$URL_API$botToken/getUpdates?offset=$updateId"
-        val updateRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
+    suspend fun getUpdates(lastUpdateId: Long): TelegramUpdates {
+        val updatesUrl = "$URL_API$botToken/getUpdates?offset=$lastUpdateId"
+        val response: String = client.get(updatesUrl)
+        return json.decodeFromString<TelegramUpdates>(response)
+    }
+
+    suspend fun sendMessage(chatId: Long, message: String): String? {
+        val requestBody = SendMessageRequest(
+            chatId = chatId,
+            text = message
+        )
+
         return try {
-            val response = client.send(updateRequest, BodyHandlers.ofString())
-            handleResponse(response)
+            val response: String = client.post(urlSendMessage) {
+                body = requestBody
+                contentType(ContentType.Application.Json)
+            }
+            response
         } catch (e: Exception) {
-            println("Error getting updates: ${e.message}")
+            println("Ошибка отправки сообщения: ${e.message}")
             null
         }
     }
 
-    fun sendMessage(json: Json, chatId: Long, message: String): String? {
-        val requestBody = SendMessageRequest(
-            chatId = chatId,
-            text = message,
-        )
-        val requestBodyString = json.encodeToString(requestBody)
-        val request = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
-            .header("Content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
-            .build()
-        val response = client.send(request, BodyHandlers.ofString())
-        return response.body()
-    }
-
-    fun sendMenu(json: Json,chatId: Long): String? {
+    suspend fun sendMenu(chatId: Long): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = "Основное меню",
@@ -52,14 +56,12 @@ class TelegramBotService(private val botToken: String) {
                 ))
             )
         )
-        val requestBodyString = json.encodeToString(requestBody)
-        val menuRequest = HttpRequest.newBuilder()
-            .uri(URI.create(urlSendMessage))
-            .header("Content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
-            .build()
+
         return try {
-            val response = client.send(menuRequest, BodyHandlers.ofString())
+            val response: String = client.post(urlSendMessage) {
+                body = requestBody
+                contentType(ContentType.Application.Json)
+            }
             handleResponse(response)
         } catch (e: Exception) {
             println("Error sending menu: ${e.message}")
@@ -67,7 +69,7 @@ class TelegramBotService(private val botToken: String) {
         }
     }
 
-    fun sendQuestion(json: Json, chatId: Long, question: Question): String? {
+    suspend fun sendQuestion(chatId: Long, question: Question): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = question.correctAnswer.questionWord,
@@ -80,26 +82,32 @@ class TelegramBotService(private val botToken: String) {
                 })
             )
         )
-        val requestBodyString = json.encodeToString(requestBody)
-        val menuRequest = HttpRequest.newBuilder()
-            .uri(URI.create(urlSendMessage))
-            .header("Content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
-            .build()
+
         return try {
-            val httpResponse = client.send(menuRequest, BodyHandlers.ofString())
-            handleResponse(httpResponse)
+            val response: String = client.post(urlSendMessage) {
+                body = requestBody
+                contentType(ContentType.Application.Json)
+            }
+            handleResponse(response)
         } catch (e: Exception) {
-            println("Error sending menu: ${e.message}")
+            println("Ошибка отправки вопроса: ${e.message}")
             null
         }
     }
 
-    private fun handleResponse(response: HttpResponse<String>): String? {
-        return if (response.statusCode() == 200) {
-            response.body()
-        } else {
-            println("Error: Received status code ${response.statusCode()}")
+    private fun handleResponse(response: String): String? {
+        return try {
+            val telegramResponse = json.decodeFromString<TelegramUpdates>(response)
+            if (telegramResponse.ok) {
+                telegramResponse.result.let {
+                    "Сообщение отправлено успешно"
+                }
+            } else {
+                println("Ошибка в ответе от Telegram: ${telegramResponse.errorCode} ${telegramResponse.description}")
+                null
+            }
+        } catch (e: Exception) {
+            println("Ошибка обработки ответа: ${e.message}")
             null
         }
     }

@@ -64,7 +64,7 @@ class LearnWordsTrainer(
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
         return question?.let {
-            val correctAnswerId = it.variants.indexOf(it.correctAnswer)
+            val correctAnswerId = it.variants.indexOf(it.correctAnswer) + 1
 
             if (correctAnswerId == userAnswerIndex) {
                 it.correctAnswer.incrementCorrectCount()
@@ -74,6 +74,10 @@ class LearnWordsTrainer(
                 false
             }
         } ?: false
+    }
+
+    fun getCurrentQuestion(): Word? {
+        return question?.correctAnswer
     }
 
     private fun loadDictionary(): List<Word> {
