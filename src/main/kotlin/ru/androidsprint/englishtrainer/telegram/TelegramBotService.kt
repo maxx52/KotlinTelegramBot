@@ -1,3 +1,5 @@
+package ru.androidsprint.englishtrainer.telegram
+
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import io.ktor.client.HttpClient
@@ -5,15 +7,23 @@ import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.*
 import io.ktor.http.*
+import ru.androidsprint.englishtrainer.telegram.entities.InlineKeyboard
+import ru.androidsprint.englishtrainer.telegram.entities.ReplyMarkup
+import ru.androidsprint.englishtrainer.telegram.entities.SendMessageRequest
+import ru.androidsprint.englishtrainer.telegram.entities.TelegramUpdates
+import ru.androidsprint.englishtrainer.trainer.model.Question
 
 const val URL_API = "https://api.telegram.org/bot"
 const val LEARN_WORDS = "learn_words_clicked"
 const val STAT_CLICKED = "statistics_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
+const val TIME_UPDATE = 2000L
 
 val json = Json { ignoreUnknownKeys = true }
 
-class TelegramBotService(private val botToken: String) {
+class TelegramBotService(
+    private val botToken: String
+) {
     private val client = HttpClient {
         install(JsonFeature) {
             serializer = KotlinxSerializer()
@@ -77,7 +87,7 @@ class TelegramBotService(private val botToken: String) {
                 listOf(question.variants.mapIndexed { index, word ->
                     InlineKeyboard(
                         text = word.translate,
-                        callbackData = "${CALLBACK_DATA_ANSWER_PREFIX}${index + 1}"
+                        callbackData = "$CALLBACK_DATA_ANSWER_PREFIX${index + 1}"
                     )
                 })
             )

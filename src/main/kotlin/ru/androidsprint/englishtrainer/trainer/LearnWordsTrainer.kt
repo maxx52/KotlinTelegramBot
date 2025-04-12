@@ -1,32 +1,17 @@
+package ru.androidsprint.englishtrainer.trainer
+
+import ru.androidsprint.englishtrainer.trainer.model.Question
+import ru.androidsprint.englishtrainer.trainer.model.Statistics
+import ru.androidsprint.englishtrainer.trainer.model.Word
 import java.io.File
-
-data class Statistics(
-    val totalCount: Int,
-    val learnedCount: List<Word>,
-    val percent: Int,
-)
-
-data class Question(
-    val variants: List<Word>,
-    val correctAnswer: Word,
-)
-
-data class Word(
-    val questionWord: String,
-    val translate: String,
-    var correctAnswersCount: Int = 0,
-) {
-    fun incrementCorrectCount() {
-        correctAnswersCount++
-    }
-}
 
 class LearnWordsTrainer(
     private val learnedAnswerCount: Int = 3,
     private val countOfQuestionWords: Int = 4,
 ) {
     private val dictionary = loadDictionary()
-    private var question: Question? = null
+    var currentQuestion: Question? = null
+        private set
 
     fun saveDictionary(words: List<Word>) {
         val wordsFile = File("words.txt")
@@ -55,15 +40,15 @@ class LearnWordsTrainer(
         } else {
             notLearnedList.shuffled().take(countOfQuestionWords)
         }.shuffled()
-        question = Question(
+        currentQuestion = Question(
             variants,
             correctAnswer = notLearnedList.random()
         )
-        return question
+        return currentQuestion
     }
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
-        return question?.let {
+        return currentQuestion?.let {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer) + 1
 
             if (correctAnswerId == userAnswerIndex) {
@@ -77,7 +62,7 @@ class LearnWordsTrainer(
     }
 
     fun getCurrentQuestion(): Word? {
-        return question?.correctAnswer
+        return currentQuestion?.correctAnswer
     }
 
     private fun loadDictionary(): List<Word> {
