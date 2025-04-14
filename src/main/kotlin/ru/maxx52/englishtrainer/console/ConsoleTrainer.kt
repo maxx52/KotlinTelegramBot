@@ -1,8 +1,8 @@
-package ru.androidsprint.englishtrainer.console
+package ru.maxx52.englishtrainer.console
 
-import ru.androidsprint.englishtrainer.trainer.LearnWordsTrainer
-import ru.androidsprint.englishtrainer.trainer.model.Question
-import ru.androidsprint.englishtrainer.trainer.model.Word
+import ru.maxx52.englishtrainer.trainer.LearnWordsTrainer
+import ru.maxx52.englishtrainer.trainer.model.Question
+import ru.maxx52.englishtrainer.trainer.model.Word
 import java.lang.NumberFormatException
 
 fun getUserInput(prompt: String = "Ваш ответ:"): Int? {

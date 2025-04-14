@@ -1,8 +1,8 @@
-package ru.androidsprint.englishtrainer.trainer
+package ru.maxx52.englishtrainer.trainer
 
-import ru.androidsprint.englishtrainer.trainer.model.Question
-import ru.androidsprint.englishtrainer.trainer.model.Statistics
-import ru.androidsprint.englishtrainer.trainer.model.Word
+import ru.maxx52.englishtrainer.trainer.model.Question
+import ru.maxx52.englishtrainer.trainer.model.Statistics
+import ru.maxx52.englishtrainer.trainer.model.Word
 import java.io.File
 
 class LearnWordsTrainer(

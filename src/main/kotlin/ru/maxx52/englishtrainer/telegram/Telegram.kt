@@ -1,9 +1,9 @@
-package ru.androidsprint.englishtrainer.telegram
+package ru.maxx52.englishtrainer.telegram
 
 import kotlinx.coroutines.runBlocking
-import ru.androidsprint.englishtrainer.telegram.entities.TelegramUpdates
-import ru.androidsprint.englishtrainer.telegram.entities.Update
-import ru.androidsprint.englishtrainer.trainer.LearnWordsTrainer
+import ru.maxx52.englishtrainer.telegram.entities.TelegramUpdates
+import ru.maxx52.englishtrainer.telegram.entities.Update
+import ru.maxx52.englishtrainer.trainer.LearnWordsTrainer
 
 fun main(args: Array<String>) = runBlocking {
     val botToken = args[0]
@@ -55,7 +55,6 @@ suspend fun handleCallbackData(
                 val currentWord = trainer.getCurrentQuestion()
                 if (currentWord != null) {
                     val correctTranslation = trainer.currentQuestion?.correctAnswer?.translate
-                    val userAnswer = trainer.checkAnswer(userAnswerIndex)
                     val responseMessage = "Неправильно! ${currentWord.questionWord} - это $correctTranslation."
                     service.sendMessage(chatId, responseMessage)
                 } else {

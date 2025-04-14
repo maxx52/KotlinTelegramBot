@@ -1,17 +1,19 @@
-package ru.androidsprint.englishtrainer.telegram
+package ru.maxx52.englishtrainer.telegram
 
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import io.ktor.client.HttpClient
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import ru.androidsprint.englishtrainer.telegram.entities.InlineKeyboard
-import ru.androidsprint.englishtrainer.telegram.entities.ReplyMarkup
-import ru.androidsprint.englishtrainer.telegram.entities.SendMessageRequest
-import ru.androidsprint.englishtrainer.telegram.entities.TelegramUpdates
-import ru.androidsprint.englishtrainer.trainer.model.Question
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
+import ru.maxx52.englishtrainer.telegram.entities.InlineKeyboard
+import ru.maxx52.englishtrainer.telegram.entities.ReplyMarkup
+import ru.maxx52.englishtrainer.telegram.entities.SendMessageRequest
+import ru.maxx52.englishtrainer.telegram.entities.TelegramUpdates
+import ru.maxx52.englishtrainer.trainer.model.Question
 
 const val URL_API = "https://api.telegram.org/bot"
 const val LEARN_WORDS = "learn_words_clicked"
@@ -24,19 +26,31 @@ val json = Json { ignoreUnknownKeys = true }
 class TelegramBotService(
     private val botToken: String
 ) {
-    private val client = HttpClient {
-        install(JsonFeature) {
-            serializer = KotlinxSerializer()
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = true
+            })
         }
     }
     private val urlSendMessage = "$URL_API$botToken/sendMessage"
 
     suspend fun getUpdates(lastUpdateId: Long): TelegramUpdates {
         val updatesUrl = "$URL_API$botToken/getUpdates?offset=$lastUpdateId"
-        val response: String = client.get(updatesUrl)
-        return json.decodeFromString<TelegramUpdates>(response)
+
+        return try {
+            client.get(updatesUrl).body()
+        } catch (e: Exception) {
+            println("Ошибка получения обновлений: ${e.message}")
+            TelegramUpdates(
+                ok = false,
+            )
+        }
     }
 
+    @OptIn(InternalAPI::class)
     suspend fun sendMessage(chatId: Long, message: String): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
@@ -47,7 +61,7 @@ class TelegramBotService(
             val response: String = client.post(urlSendMessage) {
                 body = requestBody
                 contentType(ContentType.Application.Json)
-            }
+            }.body()
             response
         } catch (e: Exception) {
             println("Ошибка отправки сообщения: ${e.message}")
@@ -55,6 +69,7 @@ class TelegramBotService(
         }
     }
 
+    @OptIn(InternalAPI::class)
     suspend fun sendMenu(chatId: Long): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
@@ -71,7 +86,7 @@ class TelegramBotService(
             val response: String = client.post(urlSendMessage) {
                 body = requestBody
                 contentType(ContentType.Application.Json)
-            }
+            }.body()
             handleResponse(response)
         } catch (e: Exception) {
             println("Error sending menu: ${e.message}")
@@ -79,6 +94,7 @@ class TelegramBotService(
         }
     }
 
+    @OptIn(InternalAPI::class)
     suspend fun sendQuestion(chatId: Long, question: Question): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
@@ -97,7 +113,7 @@ class TelegramBotService(
             val response: String = client.post(urlSendMessage) {
                 body = requestBody
                 contentType(ContentType.Application.Json)
-            }
+            }.body()
             handleResponse(response)
         } catch (e: Exception) {
             println("Ошибка отправки вопроса: ${e.message}")

@@ -1,8 +1,7 @@
-package ru.androidsprint.englishtrainer.telegram.entities
+package ru.maxx52.englishtrainer.telegram.entities
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ru.androidsprint.englishtrainer.telegram.entities.User
 
 @Serializable
 data class CallbackQuery(
