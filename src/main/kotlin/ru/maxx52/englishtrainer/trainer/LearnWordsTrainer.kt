@@ -7,7 +7,6 @@ import java.io.File
 
 class LearnWordsTrainer(
     private val learnedAnswerCount: Int = 3,
-    private val countOfQuestionWords: Int = 4,
 ) {
     private val dictionary = loadDictionary()
     var currentQuestion: Question? = null
@@ -25,24 +24,31 @@ class LearnWordsTrainer(
 
     fun getStatistics() : Statistics {
         val totalCount = dictionary.size
-        val learnedCount = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }
+        val learnedCount = dictionary
+            .filter { it.correctAnswersCount >= learnedAnswerCount }
         val percent = learnedCount.size * 100 / totalCount
         return Statistics(totalCount, learnedCount, percent)
     }
 
     fun getNextQuestion(): Question? {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < learnedAnswerCount }
+        val notLearnedList = dictionary
+            .filter { it.correctAnswersCount < learnedAnswerCount }
+            .shuffled()
         if (notLearnedList.isEmpty()) return null
-        val variants = if (notLearnedList.size < countOfQuestionWords) {
-            val learnedList = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }.shuffled()
-            notLearnedList.shuffled().take(countOfQuestionWords) +
-                    learnedList.take(countOfQuestionWords - notLearnedList.size)
-        } else {
-            notLearnedList.shuffled().take(countOfQuestionWords)
-        }.shuffled()
+        val correctWord = notLearnedList.random().questionWord
+        val correctAnswer = correctWord.let { word ->
+            dictionary.firstOrNull { it.questionWord == word }
+        } ?: return null
+        val variants = mutableListOf(correctAnswer)
+        val remainingWords = dictionary.filter { it != correctAnswer }
+        val additionalVariants = remainingWords.shuffled().take(learnedAnswerCount)
+
+        variants.addAll(additionalVariants)
+        variants.shuffle()
+
         currentQuestion = Question(
             variants,
-            correctAnswer = notLearnedList.random()
+            correctAnswer = correctAnswer
         )
         return currentQuestion
     }

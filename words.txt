@@ -1,12 +1,12 @@
-cat|кошка|0
-box|коробка|0
-pepper|перец|0
+cat|кошка|3
+box|коробка|3
+pepper|перец|1
 red|красный|0
 food|еда|0
 breakfast|завтрак|0
 dinner|обед|0
 lunch|ланч|0
-snack|закуска|0
+snack|закуска|1
 meal|блюдо|0
 beverage|напиток|0
 sweet|сладкий|0
@@ -24,7 +24,7 @@ pastry|выпечка|0
 butter|сливочное масло|0
 candy|сладости|0
 fish|рыба|0
-berries|ягоды|0
+berries|ягоды|1
 ham|ветчина|0
 biscuits|печенье|0
 salt|соль|0
@@ -33,7 +33,7 @@ cheese|сыр|0
 alcohol|алкоголь|0
 soft drinks|безалкогольные напитки|0
 water|вода|0
-coffee|кофе|0
+coffee|кофе|1
 tea|чай|0
 wine|вино|0
 juice|сок|0
@@ -43,5 +43,5 @@ fork|вилка|0
 spoon|ложка|0
 knife|нож|0
 glass|стакан|0
-mug|кружка|0
-plate|тарелка|0
+mug|кружка|1
+plate|тарелка|1
