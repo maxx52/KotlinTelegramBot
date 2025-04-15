@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import ru.maxx52.englishtrainer.telegram.entities.TelegramUpdates
 import ru.maxx52.englishtrainer.telegram.entities.Update
 import ru.maxx52.englishtrainer.trainer.LearnWordsTrainer
+import ru.maxx52.englishtrainer.trainer.model.Word
 
 fun main(args: Array<String>) = runBlocking {
     val botToken = args[0]
@@ -76,6 +77,11 @@ suspend fun handleCallbackData(
         val statistics = trainer.getStatistics()
         val message = "Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent}%"
         service.sendMessage(chatId, message)
+    }
+
+    if (data.startsWith(NULL_DICTIONARY)) {
+        val words = trainer.loadDictionary()
+        trainer.restartLearning(words)
     }
 }
 

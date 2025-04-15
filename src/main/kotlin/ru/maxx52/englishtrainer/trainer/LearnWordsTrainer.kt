@@ -7,6 +7,7 @@ import java.io.File
 
 class LearnWordsTrainer(
     private val learnedAnswerCount: Int = 3,
+    private val countOfQuestionWords: Int = 4,
 ) {
     private val dictionary = loadDictionary()
     var currentQuestion: Question? = null
@@ -33,19 +34,18 @@ class LearnWordsTrainer(
     fun getNextQuestion(): Question? {
         val notLearnedList = dictionary
             .filter { it.correctAnswersCount < learnedAnswerCount }
-            .shuffled()
         if (notLearnedList.isEmpty()) return null
-        val correctWord = notLearnedList.random().questionWord
-        val correctAnswer = correctWord.let { word ->
-            dictionary.firstOrNull { it.questionWord == word }
-        } ?: return null
-        val variants = mutableListOf(correctAnswer)
-        val remainingWords = dictionary.filter { it != correctAnswer }
-        val additionalVariants = remainingWords.shuffled().take(learnedAnswerCount)
 
-        variants.addAll(additionalVariants)
-        variants.shuffle()
+        var variants = notLearnedList.take(countOfQuestionWords)
+        val correctAnswer = variants.random()
 
+        if (variants.size < countOfQuestionWords) {
+            val learnedList = dictionary
+                .filter { it.correctAnswersCount >= learnedAnswerCount }
+                .shuffled()
+            variants = (variants + learnedList.take(countOfQuestionWords - variants.size))
+                .shuffled()
+        }
         currentQuestion = Question(
             variants,
             correctAnswer = correctAnswer
@@ -71,7 +71,7 @@ class LearnWordsTrainer(
         return currentQuestion?.correctAnswer
     }
 
-    private fun loadDictionary(): List<Word> {
+    fun loadDictionary(): List<Word> {
         try {
             val dictionary = mutableListOf<Word>()
             val wordsFile = File("words.txt")
@@ -98,6 +98,19 @@ class LearnWordsTrainer(
             return dictionary
         } catch (e: IndexOutOfBoundsException) {
             throw IllegalStateException("некорректный файл")
+        }
+    }
+
+    fun restartLearning(words: List<Word>) {
+        val wordsFile = File("words.txt")
+        return try {
+            wordsFile.printWriter().use { out ->
+                for (word in words) {
+                    out.println("${word.questionWord}|${word.translate}|0")
+                }
+            }
+        } catch (e: Exception) {
+            println("Ошибка при перезаписи словаря: ${e.message}")
         }
     }
 }

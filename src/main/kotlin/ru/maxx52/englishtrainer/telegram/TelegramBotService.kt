@@ -18,6 +18,7 @@ import ru.maxx52.englishtrainer.trainer.model.Question
 const val URL_API = "https://api.telegram.org/bot"
 const val LEARN_WORDS = "learn_words_clicked"
 const val STAT_CLICKED = "statistics_clicked"
+const val NULL_DICTIONARY = "null_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 const val TIME_UPDATE = 2000L
 
@@ -75,6 +76,7 @@ class TelegramBotService(
                     listOf(
                         InlineKeyboard(callbackData = LEARN_WORDS, text = "Изучать слова"),
                         InlineKeyboard(callbackData = STAT_CLICKED, text = "Статистика"),
+                        InlineKeyboard(callbackData = NULL_DICTIONARY, text = "Обнулить прогресс")
                     )
                 )
             )
