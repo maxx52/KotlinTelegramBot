@@ -1,32 +1,17 @@
+package ru.maxx52.englishtrainer.trainer
+
+import ru.maxx52.englishtrainer.trainer.model.Question
+import ru.maxx52.englishtrainer.trainer.model.Statistics
+import ru.maxx52.englishtrainer.trainer.model.Word
 import java.io.File
-
-data class Statistics(
-    val totalCount: Int,
-    val learnedCount: List<Word>,
-    val percent: Int,
-)
-
-data class Question(
-    val variants: List<Word>,
-    val correctAnswer: Word,
-)
-
-data class Word(
-    val questionWord: String,
-    val translate: String,
-    var correctAnswersCount: Int = 0,
-) {
-    fun incrementCorrectCount() {
-        correctAnswersCount++
-    }
-}
 
 class LearnWordsTrainer(
     private val learnedAnswerCount: Int = 3,
     private val countOfQuestionWords: Int = 4,
 ) {
     private val dictionary = loadDictionary()
-    private var question: Question? = null
+    var currentQuestion: Question? = null
+        private set
 
     fun saveDictionary(words: List<Word>) {
         val wordsFile = File("words.txt")
@@ -40,31 +25,37 @@ class LearnWordsTrainer(
 
     fun getStatistics() : Statistics {
         val totalCount = dictionary.size
-        val learnedCount = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }
+        val learnedCount = dictionary
+            .filter { it.correctAnswersCount >= learnedAnswerCount }
         val percent = learnedCount.size * 100 / totalCount
         return Statistics(totalCount, learnedCount, percent)
     }
 
     fun getNextQuestion(): Question? {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < learnedAnswerCount }
+        val notLearnedList = dictionary
+            .filter { it.correctAnswersCount < learnedAnswerCount }
         if (notLearnedList.isEmpty()) return null
-        val variants = if (notLearnedList.size < countOfQuestionWords) {
-            val learnedList = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }.shuffled()
-            notLearnedList.shuffled().take(countOfQuestionWords) +
-                    learnedList.take(countOfQuestionWords - notLearnedList.size)
-        } else {
-            notLearnedList.shuffled().take(countOfQuestionWords)
-        }.shuffled()
-        question = Question(
+
+        var variants = notLearnedList.take(countOfQuestionWords)
+        val correctAnswer = variants.random()
+
+        if (variants.size < countOfQuestionWords) {
+            val learnedList = dictionary
+                .filter { it.correctAnswersCount >= learnedAnswerCount }
+                .shuffled()
+            variants = (variants + learnedList.take(countOfQuestionWords - variants.size))
+                .shuffled()
+        }
+        currentQuestion = Question(
             variants,
-            correctAnswer = notLearnedList.random()
+            correctAnswer = correctAnswer
         )
-        return question
+        return currentQuestion
     }
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
-        return question?.let {
-            val correctAnswerId = it.variants.indexOf(it.correctAnswer)
+        return currentQuestion?.let {
+            val correctAnswerId = it.variants.indexOf(it.correctAnswer) + 1
 
             if (correctAnswerId == userAnswerIndex) {
                 it.correctAnswer.incrementCorrectCount()
@@ -76,7 +67,11 @@ class LearnWordsTrainer(
         } ?: false
     }
 
-    private fun loadDictionary(): List<Word> {
+    fun getCurrentQuestion(): Word? {
+        return currentQuestion?.correctAnswer
+    }
+
+    fun loadDictionary(): List<Word> {
         try {
             val dictionary = mutableListOf<Word>()
             val wordsFile = File("words.txt")
@@ -103,6 +98,19 @@ class LearnWordsTrainer(
             return dictionary
         } catch (e: IndexOutOfBoundsException) {
             throw IllegalStateException("некорректный файл")
+        }
+    }
+
+    fun restartLearning(words: List<Word>) {
+        val wordsFile = File("words.txt")
+        return try {
+            wordsFile.printWriter().use { out ->
+                for (word in words) {
+                    out.println("${word.questionWord}|${word.translate}|0")
+                }
+            }
+        } catch (e: Exception) {
+            println("Ошибка при перезаписи словаря: ${e.message}")
         }
     }
 }
