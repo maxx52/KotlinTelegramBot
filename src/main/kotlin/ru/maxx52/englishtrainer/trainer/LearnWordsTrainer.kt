@@ -6,6 +6,7 @@ import ru.maxx52.englishtrainer.trainer.model.Word
 import java.io.File
 
 class LearnWordsTrainer(
+    private val fileName: String = "words.txt",
     private val learnedAnswerCount: Int = 3,
     private val countOfQuestionWords: Int = 4,
 ) {
@@ -13,14 +14,14 @@ class LearnWordsTrainer(
     var currentQuestion: Question? = null
         private set
 
-    fun saveDictionary(words: List<Word>) {
-        val wordsFile = File("words.txt")
+    fun saveDictionary() {
+        val wordsFile = File(fileName)
         wordsFile.printWriter().use { out ->
-            for (word in words) {
+            for (word in dictionary) {
                 out.println("${word.questionWord}|${word.translate}|${word.correctAnswersCount}")
             }
         }
-        println("Словарь успешно сохранён.")
+        println("Словарь успешно сохранён")
     }
 
     fun getStatistics() : Statistics {
@@ -59,7 +60,7 @@ class LearnWordsTrainer(
 
             if (correctAnswerId == userAnswerIndex) {
                 it.correctAnswer.incrementCorrectCount()
-                saveDictionary(dictionary)
+                saveDictionary()
                 true
             } else {
                 false
@@ -74,11 +75,10 @@ class LearnWordsTrainer(
     fun loadDictionary(): List<Word> {
         try {
             val dictionary = mutableListOf<Word>()
-            val wordsFile = File("words.txt")
+            val wordsFile = File(fileName)
 
             if (!wordsFile.exists()) {
-                println("Файл не найден: ${wordsFile.absolutePath}")
-                return dictionary
+                File("words.txt").copyTo(wordsFile)
             }
 
             var correctAnswersCount: Int
@@ -96,19 +96,20 @@ class LearnWordsTrainer(
                 }
             }
             return dictionary
-        } catch (e: IndexOutOfBoundsException) {
+        } catch (_: IndexOutOfBoundsException) {
             throw IllegalStateException("некорректный файл")
         }
     }
 
-    fun restartLearning(words: List<Word>) {
-        val wordsFile = File("words.txt")
+    fun restartLearning() {
+        val wordsFile = File(fileName)
         return try {
             wordsFile.printWriter().use { out ->
-                for (word in words) {
+                for (word in dictionary) {
                     out.println("${word.questionWord}|${word.translate}|0")
                 }
             }
+            println("Прогресс успешно обновлён")
         } catch (e: Exception) {
             println("Ошибка при перезаписи словаря: ${e.message}")
         }

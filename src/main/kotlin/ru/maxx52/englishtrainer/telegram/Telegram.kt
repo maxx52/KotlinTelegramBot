@@ -4,37 +4,50 @@ import kotlinx.coroutines.runBlocking
 import ru.maxx52.englishtrainer.telegram.entities.TelegramUpdates
 import ru.maxx52.englishtrainer.telegram.entities.Update
 import ru.maxx52.englishtrainer.trainer.LearnWordsTrainer
-import ru.maxx52.englishtrainer.trainer.model.Word
 
 fun main(args: Array<String>) = runBlocking {
     val botToken = args[0]
     val service = TelegramBotService(botToken)
-    val trainer = LearnWordsTrainer()
+    val trainers = HashMap<Long, LearnWordsTrainer>()
     var lastUpdateId = 0L
 
     while (true) {
         Thread.sleep(TIME_UPDATE)
         val updates: TelegramUpdates = service.getUpdates(lastUpdateId)
+        if (updates.result.isEmpty()) continue
+        val sortedUpdates = updates.result.sortedBy { it.updateId }
+        sortedUpdates.forEach { handleUpdate(it, service, trainers) }
+        lastUpdateId = sortedUpdates.last().updateId + 1
+    }
+}
 
-        val firstUpdate: Update = updates.result.firstOrNull() ?: continue
-        lastUpdateId = firstUpdate.updateId + 1
+suspend fun handleUpdate(
+    update: Update,
+    service: TelegramBotService,
+    trainers: HashMap<Long, LearnWordsTrainer>
+) {
+    val chatId: Long = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
 
-        val chatId = firstUpdate.message?.chat?.id
-            ?: firstUpdate.callbackQuery?.message?.chat?.id
-            ?: continue
-        val text = firstUpdate.message?.text
-        val data = firstUpdate.callbackQuery?.data
+    val text = update.message?.text
+    val data = update.callbackQuery?.data
 
-        if (text != null) {
-            println("Received message: $text")
-            if (text == "/menu" || text == "/start") {
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
+
+    if (text != null) {
+        println("Received message: $text")
+        when (text) {
+            "/menu", "/start" -> {
                 service.sendMenu(chatId)
             }
+            else -> {
+                println("Неизвестная команда: $text")
+            }
         }
+    }
 
-        if (data != null) {
-            handleCallbackData(data, chatId, trainer, service)
-        }
+    if (data != null) {
+        println("Received callback data: $data")
+        handleCallbackData(data, chatId, trainer, service)
     }
 }
 
@@ -75,13 +88,12 @@ suspend fun handleCallbackData(
 
     if (data.startsWith(STAT_CLICKED)) {
         val statistics = trainer.getStatistics()
-        val message = "Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent}%"
-        service.sendMessage(chatId, message)
+        service.sendMessage(chatId, "Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent}%")
     }
 
     if (data.startsWith(NULL_DICTIONARY)) {
-        val words = trainer.loadDictionary()
-        trainer.restartLearning(words)
+        trainer.restartLearning()
+        service.sendMessage(chatId, "Прогресс обновлён")
     }
 }
 
