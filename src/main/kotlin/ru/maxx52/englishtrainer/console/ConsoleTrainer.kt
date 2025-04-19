@@ -20,7 +20,7 @@ fun Question.asConsoleString(): String {
 fun main() {
     val trainer = try {
         LearnWordsTrainer()
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         println("Невозможно загрузить словарь")
         return
     }
@@ -49,7 +49,7 @@ fun main() {
 
                         if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
                             println("Правильно!\n")
-                            trainer.saveDictionary(question.variants)
+                            trainer.saveDictionary()
                         } else {
                             println("Неправильно! ${question.correctAnswer.questionWord} - это ${question.correctAnswer.translate}")
                         }
@@ -68,7 +68,7 @@ fun main() {
                     println("Введите число 1, 2 или 0")
                 }
             }
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             println("Введите число 1, 2 или 0")
         }
     }

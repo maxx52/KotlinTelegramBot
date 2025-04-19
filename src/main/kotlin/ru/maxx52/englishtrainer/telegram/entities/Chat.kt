@@ -8,7 +8,9 @@ data class Chat(
     @SerialName("id")
     val id: Long,
     @SerialName("first_name")
-    val firstName: String,
+    val firstName: String? = null,
+    @SerialName("last_name")
+    val lastName: String? = null,
     val username: String? = null,
     val type: String,
 )
