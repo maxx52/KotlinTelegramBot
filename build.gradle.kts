@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm") version "2.1.20"
     kotlin("plugin.serialization") version "2.1.20"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    application
 }
 
 group = "ru.maxx52"
@@ -25,5 +27,8 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(22)
+    jvmToolchain(21)
+}
+application {
+    mainClass.set("ru.maxx52.englishtrainer.telegram.TelegramKt")
 }

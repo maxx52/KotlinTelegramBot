@@ -1,5 +1,6 @@
 package ru.maxx52.englishtrainer.telegram
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import ru.maxx52.englishtrainer.telegram.entities.TelegramUpdates
 import ru.maxx52.englishtrainer.telegram.entities.Update
@@ -12,7 +13,7 @@ fun main(args: Array<String>) = runBlocking {
     var lastUpdateId = 0L
 
     while (true) {
-        Thread.sleep(TIME_UPDATE)
+        delay(TIME_UPDATE)
         val updates: TelegramUpdates = service.getUpdates(lastUpdateId)
         if (updates.result.isEmpty()) continue
         val sortedUpdates = updates.result.sortedBy { it.updateId }
@@ -33,21 +34,23 @@ suspend fun handleUpdate(
 
     val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
 
-    if (text != null) {
-        println("Received message: $text")
-        when (text) {
-            "/menu", "/start" -> {
-                service.sendMenu(chatId)
-            }
-            else -> {
-                println("Неизвестная команда: $text")
+    when {
+        text != null -> {
+            println("Received message: $text")
+            when (text) {
+                "/menu", "/start" -> {
+                    service.sendMenu(chatId)
+                }
+                else -> {
+                    println("Неизвестная команда: $text")
+                }
             }
         }
-    }
-
-    if (data != null) {
-        println("Received callback data: $data")
-        handleCallbackData(data, chatId, trainer, service)
+        data != null -> {
+            println("Received callback data: $data")
+            handleCallbackData(data, chatId, trainer, service)
+        }
+        else -> false
     }
 }
 
@@ -57,43 +60,43 @@ suspend fun handleCallbackData(
     trainer: LearnWordsTrainer,
     service: TelegramBotService
 ) {
-    if (data.startsWith(CALLBACK_DATA_ANSWER_PREFIX)) {
-        val userAnswerIndex = data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
+    when {
+        data.startsWith(CALLBACK_DATA_ANSWER_PREFIX) -> {
+            val userAnswerIndex = data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
 
-        if (userAnswerIndex != null) {
-            val isCorrect = trainer.checkAnswer(userAnswerIndex)
+            if (userAnswerIndex != null) {
+                val isCorrect = trainer.checkAnswer(userAnswerIndex)
 
-            if (isCorrect) {
-                service.sendMessage(chatId, "Правильно!")
-            } else {
-                val currentWord = trainer.getCurrentQuestion()
-                if (currentWord != null) {
-                    val correctTranslation = trainer.currentQuestion?.correctAnswer?.translate
-                    val responseMessage = "Неправильно! ${currentWord.questionWord} - это $correctTranslation."
-                    service.sendMessage(chatId, responseMessage)
+                if (isCorrect) {
+                    service.sendMessage(chatId, "Правильно!")
                 } else {
-                    service.sendMessage(chatId, "Ошибка: Неверный вопрос.")
+                    val currentWord = trainer.getCurrentQuestion()
+                    if (currentWord != null) {
+                        val correctTranslation = trainer.currentQuestion?.correctAnswer?.translate
+                        val responseMessage = "Неправильно! ${currentWord.questionWord} - это $correctTranslation."
+                        service.sendMessage(chatId, responseMessage)
+                    } else {
+                        service.sendMessage(chatId, "Ошибка: Неверный вопрос")
+                    }
                 }
+
+                checkNextQuestionAndSend(trainer, service, chatId)
+            } else {
+                println("Ошибка: Неверный формат данных ответа")
             }
-
-            checkNextQuestionAndSend(trainer, service, chatId)
-        } else {
-            println("Ошибка: Неверный формат данных ответа.")
         }
-    }
-
-    if (data.startsWith(LEARN_WORDS)) {
-        checkNextQuestionAndSend(trainer, service, chatId)
-    }
-
-    if (data.startsWith(STAT_CLICKED)) {
-        val statistics = trainer.getStatistics()
-        service.sendMessage(chatId, "Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent}%")
-    }
-
-    if (data.startsWith(NULL_DICTIONARY)) {
-        trainer.restartLearning()
-        service.sendMessage(chatId, "Прогресс обновлён")
+        data.startsWith(LEARN_WORDS) -> {
+            checkNextQuestionAndSend(trainer, service, chatId)
+        }
+        data.startsWith(STAT_CLICKED) -> {
+            val statistics = trainer.getStatistics()
+            service.sendMessage(chatId, "Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent}%")
+        }
+        data.startsWith(NULL_DICTIONARY) -> {
+            trainer.restartLearning()
+            service.sendMessage(chatId, "Прогресс обновлён")
+        }
+        else -> service.sendMessage(chatId, "Неизвестная команда!")
     }
 }
 
@@ -104,7 +107,7 @@ suspend fun checkNextQuestionAndSend(
 ) {
     val question = trainer.getNextQuestion()
     if (question == null) {
-        service.sendMessage(chatId, "Все слова в словаре выучены.")
+        service.sendMessage(chatId, "Все слова в словаре выучены")
     } else {
         service.sendQuestion(chatId, question)
     }
