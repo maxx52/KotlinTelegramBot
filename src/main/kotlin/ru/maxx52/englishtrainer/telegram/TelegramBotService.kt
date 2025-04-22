@@ -75,8 +75,12 @@ class TelegramBotService(
                 listOf(
                     listOf(
                         InlineKeyboard(callbackData = LEARN_WORDS, text = "Изучать слова"),
+                    ),
+                    listOf(
                         InlineKeyboard(callbackData = STAT_CLICKED, text = "Статистика"),
-                        InlineKeyboard(callbackData = NULL_DICTIONARY, text = "Обнулить прогресс")
+                    ),
+                    listOf(
+                        InlineKeyboard(callbackData = NULL_DICTIONARY, text = "Обнулить прогресс"),
                     )
                 )
             )
@@ -99,12 +103,14 @@ class TelegramBotService(
             chatId = chatId,
             text = question.correctAnswer.questionWord,
             replyMarkup = ReplyMarkup(
-                listOf(question.variants.mapIndexed { index, word ->
-                    InlineKeyboard(
-                        text = word.translate,
-                        callbackData = "$CALLBACK_DATA_ANSWER_PREFIX${index + 1}"
+                question.variants.map { word ->
+                    listOf(
+                        InlineKeyboard(
+                            text = word.translate,
+                            callbackData = "$CALLBACK_DATA_ANSWER_PREFIX${question.variants.indexOf(word) + 1}"
+                        )
                     )
-                })
+                }
             )
         )
 
@@ -119,6 +125,7 @@ class TelegramBotService(
             null
         }
     }
+
 
     private suspend fun handleResponse(response: HttpResponse): String? {
         return try {

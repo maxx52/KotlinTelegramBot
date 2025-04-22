@@ -41,6 +41,17 @@ suspend fun handleUpdate(
                 "/menu", "/start" -> {
                     service.sendMenu(chatId)
                 }
+                "/learn_words" -> {
+                    checkNextQuestionAndSend(trainer, service, chatId)
+                }
+                "/statistics" -> {
+                    val statistics = trainer.getStatistics()
+                    service.sendMessage(chatId, "Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent}%")
+                }
+                "/restart" -> {
+                    trainer.restartLearning()
+                    service.sendMessage(chatId, "Прогресс обновлён")
+                }
                 else -> {
                     println("Неизвестная команда: $text")
                 }
