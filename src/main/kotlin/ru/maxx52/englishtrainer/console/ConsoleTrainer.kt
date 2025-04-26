@@ -1,5 +1,6 @@
 package ru.maxx52.englishtrainer.console
 
+import ru.maxx52.englishtrainer.trainer.FileUserDictionary
 import ru.maxx52.englishtrainer.trainer.LearnWordsTrainer
 import ru.maxx52.englishtrainer.trainer.model.Question
 import ru.maxx52.englishtrainer.trainer.model.Word
@@ -14,12 +15,12 @@ fun Question.asConsoleString(): String {
     val variants = this.variants
         .mapIndexed { index: Int, word: Word -> " ${index + 1} - ${word.translate}" }
         .joinToString(separator = "\n")
-    return this.correctAnswer.questionWord + "\n" + variants + "\n 0 - выйти в меню"
+    return this.correctAnswer.original + "\n" + variants + "\n 0 - выйти в меню"
 }
 
 fun main() {
     val trainer = try {
-        LearnWordsTrainer()
+        FileUserDictionary()
     } catch (_: Exception) {
         println("Невозможно загрузить словарь")
         return
@@ -47,11 +48,11 @@ fun main() {
                         val userAnswerInput = readln().toIntOrNull()
                         if (userAnswerInput == 0) continue
 
-                        if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
+                        if (LearnWordsTrainer().checkAnswer(userAnswerInput?.minus(1))) {
                             println("Правильно!\n")
                             trainer.saveDictionary()
                         } else {
-                            println("Неправильно! ${question.correctAnswer.questionWord} - это ${question.correctAnswer.translate}")
+                            println("Неправильно! ${question.correctAnswer.original} - это ${question.correctAnswer.translate}")
                         }
                     }
                 }

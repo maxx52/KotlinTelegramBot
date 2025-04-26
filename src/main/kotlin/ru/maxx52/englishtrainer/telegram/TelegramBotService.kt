@@ -20,6 +20,7 @@ const val LEARN_WORDS = "learn_words_clicked"
 const val STAT_CLICKED = "statistics_clicked"
 const val NULL_DICTIONARY = "null_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
+const val DEFAULT_LEARNING_WORDS = 3
 const val TIME_UPDATE = 2000L
 
 class TelegramBotService(
@@ -101,7 +102,7 @@ class TelegramBotService(
     suspend fun sendQuestion(chatId: Long, question: Question): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
-            text = question.correctAnswer.questionWord,
+            text = question.correctAnswer.original,
             replyMarkup = ReplyMarkup(
                 question.variants.map { word ->
                     listOf(
