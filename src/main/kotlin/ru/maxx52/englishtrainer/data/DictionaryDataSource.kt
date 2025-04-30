@@ -1,4 +1,4 @@
-package ru.maxx52.englishtrainer
+package ru.maxx52.englishtrainer.data
 
 import java.io.File
 import java.sql.Connection
@@ -31,8 +31,7 @@ fun createTables(connection: Connection) {
         CREATE TABLE IF NOT EXISTS 'words' (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             text VARCHAR NOT NULL,
-            translate VARCHAR NOT NULL,
-            correctAnswerCount INTEGER
+            translate VARCHAR NOT NULL
         );
     """.trimIndent())
 

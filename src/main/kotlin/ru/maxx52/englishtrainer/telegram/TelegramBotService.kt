@@ -12,6 +12,7 @@ import io.ktor.serialization.kotlinx.json.*
 import ru.maxx52.englishtrainer.telegram.entities.InlineKeyboard
 import ru.maxx52.englishtrainer.telegram.entities.ReplyMarkup
 import ru.maxx52.englishtrainer.telegram.entities.SendMessageRequest
+import ru.maxx52.englishtrainer.telegram.entities.SendMessageResponse
 import ru.maxx52.englishtrainer.telegram.entities.TelegramUpdates
 import ru.maxx52.englishtrainer.trainer.model.Question
 
@@ -20,7 +21,6 @@ const val LEARN_WORDS = "learn_words_clicked"
 const val STAT_CLICKED = "statistics_clicked"
 const val NULL_DICTIONARY = "null_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
-const val DEFAULT_LEARNING_WORDS = 3
 const val TIME_UPDATE = 2000L
 
 class TelegramBotService(
@@ -61,7 +61,7 @@ class TelegramBotService(
                 setBody(requestBody)
                 contentType(ContentType.Application.Json)
             }
-            handleResponse(response)
+            handleSendMessageResponse(response)
         } catch (e: Exception) {
             println("Ошибка отправки сообщения: ${e.message}")
             null
@@ -92,7 +92,7 @@ class TelegramBotService(
                 setBody(requestBody)
                 contentType(ContentType.Application.Json)
             }
-            handleResponse(response)
+            handleSendMessageResponse(response)
         } catch (e: Exception) {
             println("Error sending menu: ${e.message}")
             null
@@ -102,7 +102,7 @@ class TelegramBotService(
     suspend fun sendQuestion(chatId: Long, question: Question): String? {
         val requestBody = SendMessageRequest(
             chatId = chatId,
-            text = question.correctAnswer.original,
+            text = question.correctAnswer.questionWord,
             replyMarkup = ReplyMarkup(
                 question.variants.map { word ->
                     listOf(
@@ -120,7 +120,7 @@ class TelegramBotService(
                 setBody(requestBody)
                 contentType(ContentType.Application.Json)
             }
-            handleResponse(response)
+            handleSendMessageResponse(response)
         } catch (e: Exception) {
             println("Ошибка отправки вопроса: ${e.message}")
             null
@@ -128,9 +128,9 @@ class TelegramBotService(
     }
 
 
-    private suspend fun handleResponse(response: HttpResponse): String? {
+    private suspend fun handleSendMessageResponse(response: HttpResponse): String? {
         return try {
-            val telegramResponse = response.body<TelegramUpdates>()
+            val telegramResponse = response.body<SendMessageResponse>()
             if (telegramResponse.ok) {
                 telegramResponse.result.let {
                     "Сообщение отправлено успешно"
