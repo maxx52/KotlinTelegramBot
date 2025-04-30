@@ -51,7 +51,7 @@ fun updateDictionary(wordsFile: File) {
     val dbUrl = "jdbc:sqlite:words.db"
     DriverManager.getConnection(dbUrl).use { connection ->
         val insertStatement: PreparedStatement = connection.prepareStatement(
-            "INSERT INTO words (text, translate, correctAnswerCount) VALUES (?, ?, ?)"
+            "INSERT INTO words (text, translate) VALUES (?, ?, ?)"
         )
 
         wordsFile.forEachLine { line ->
