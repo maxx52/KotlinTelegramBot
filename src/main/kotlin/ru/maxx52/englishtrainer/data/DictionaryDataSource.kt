@@ -8,7 +8,7 @@ import java.sql.SQLException
 
 fun main() {
     try {
-        val connection: Connection = DriverManager.getConnection("jdbc:sqlite:words.db")
+        val connection: Connection = DriverManager.getConnection(DB_URL)
         createTables(connection)
         connection.close()
     } catch (e: SQLException) {
@@ -18,15 +18,6 @@ fun main() {
 
 fun createTables(connection: Connection) {
     val fileName = File("words.txt")
-    connection.createStatement().executeUpdate("""
-        CREATE TABLE IF NOT EXISTS 'users' (
-          'id' integer PRIMARY KEY,
-          'username' VARCHAR,
-          'created_at' TIMESTAMP,
-          'chat_id' INTEGER
-        );
-    """.trimIndent())
-
     connection.createStatement().executeUpdate("""
         CREATE TABLE IF NOT EXISTS 'words' (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +31,7 @@ fun createTables(connection: Connection) {
               'user_id' INTEGER,
               'word_id' INTEGER,
               'correct_answer_count' INTEGER,
-              'updated_at' TIMESTAMP
+               PRIMARY KEY (user_id, word_id)
             );
         """.trimIndent())
     println("Таблицы успешно созданы.")
@@ -48,10 +39,9 @@ fun createTables(connection: Connection) {
 }
 
 fun updateDictionary(wordsFile: File) {
-    val dbUrl = "jdbc:sqlite:words.db"
-    DriverManager.getConnection(dbUrl).use { connection ->
+    DriverManager.getConnection(DB_URL).use { connection ->
         val insertStatement: PreparedStatement = connection.prepareStatement(
-            "INSERT INTO words (text, translate) VALUES (?, ?, ?)"
+            "INSERT INTO words (text, translate) VALUES (?, ?)"
         )
 
         wordsFile.forEachLine { line ->
@@ -59,11 +49,9 @@ fun updateDictionary(wordsFile: File) {
             if (parts.size == 3) {
                 val original = parts[0].trim()
                 val translate = parts[1].trim()
-                val correctAnswerCount = parts[2].trim().toIntOrNull() ?: 0
 
                 insertStatement.setString(1, original)
                 insertStatement.setString(2, translate)
-                insertStatement.setInt(3, correctAnswerCount)
                 insertStatement.addBatch()
             } else {
                 println("Пропуск строки: '$line' (неправильный формат)")

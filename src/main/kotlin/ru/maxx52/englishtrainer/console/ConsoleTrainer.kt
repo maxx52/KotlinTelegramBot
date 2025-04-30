@@ -49,10 +49,7 @@ fun main() {
                             val userAnswerInput = readln().toIntOrNull()
                             if (userAnswerInput == 0) break
 
-                            if (LearnWordsTrainer(userId = 0, dictionary = FileUserDictionary()).checkAnswer(
-                                    userAnswerInput?.minus(1)
-                                )
-                            ) {
+                            if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
                                 println("Правильно!\n")
                             } else {
                                 println("Неправильно! ${question.correctAnswer.questionWord} - это ${question.correctAnswer.translate}")

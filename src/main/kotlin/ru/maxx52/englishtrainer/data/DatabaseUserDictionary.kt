@@ -6,7 +6,7 @@ import java.sql.DriverManager
 import java.sql.PreparedStatement
 
 const val DB_URL = "jdbc:sqlite:words.db"
-const val DEFAULT_LEARNING_WORDS = 3
+const val DEFAULT_LEARNING_WORDS = 0
 
 class DatabaseUserDictionary : IUserDictionary {
     override fun getNumOfLearnedWords(userId: Long): Int {
@@ -14,7 +14,7 @@ class DatabaseUserDictionary : IUserDictionary {
             val query = """
             SELECT COUNT(*) AS learnedCount 
             FROM user_answers
-            WHERE user_id = ? AND correct_answer_count = 3
+            WHERE user_id = ? AND correct_answer_count >= $DEFAULT_LEARNING_WORDS
         """.trimIndent()
 
             val statement = connection.prepareStatement(query)
@@ -28,32 +28,24 @@ class DatabaseUserDictionary : IUserDictionary {
         }
     }
 
-    override fun getSize(): Int {
-        DriverManager.getConnection(DB_URL).use { connection ->
-            val query = "SELECT COUNT(*) AS size FROM words"
-            val statement = connection.createStatement()
-            val resultSet = statement.executeQuery(query)
-
-            return if (resultSet.next()) {
-                resultSet.getInt("size")
-            } else {
-                0
-            }.also {
-                resultSet.close()
-                statement.close()
+    override fun getSize(): Int =
+        DriverManager.getConnection(DB_URL)
+            .use { connection ->
+                connection.createStatement()
+                    .use { statement ->
+                        statement.executeQuery("SELECT COUNT(*) FROM words")
+                            .use { rs -> if (rs.next()) rs.getInt(1) else 0 }
+                    }
             }
-        }
-    }
 
     override fun getLearnedWords(userId: Long): List<Word> {
         val learnedWords = mutableListOf<Word>()
-        val dbUrl = "jdbc:sqlite:words.db"
-        DriverManager.getConnection(dbUrl).use { connection ->
+        DriverManager.getConnection(DB_URL).use { connection ->
             val query = """
             SELECT w.id, w.text, w.translate 
             FROM user_answers ua
             JOIN words w ON ua.word_id = w.id
-            WHERE ua.user_id = ? AND ua.correct_answer_count = 3
+            WHERE ua.user_id = ? AND ua.correct_answer_count >= $DEFAULT_LEARNING_WORDS
         """.trimIndent()
 
             val statement = connection.prepareStatement(query)
@@ -62,7 +54,8 @@ class DatabaseUserDictionary : IUserDictionary {
             while (resultSet.next()) {
                 val original = resultSet.getString("text").trim()
                 val translate = resultSet.getString("translate").trim()
-                val word = Word(original, translate, DEFAULT_LEARNING_WORDS)
+                val correctAnswerCount = resultSet.getInt("correct_answer_count")
+                val word = Word(original, translate, correctAnswerCount)
                 learnedWords.add(word)
             }
             resultSet.close()
@@ -99,64 +92,24 @@ class DatabaseUserDictionary : IUserDictionary {
 
     override fun setCorrectAnswersCount(userId: Long, word: String, correctAnswersCount: Int) {
         DriverManager.getConnection(DB_URL).use { connection ->
-            val checkStatement = connection.prepareStatement("""
-            SELECT correct_answer_count 
-            FROM user_answers 
-            WHERE user_id = ? AND word_id = (SELECT id FROM words WHERE text = ?)
-        """.trimIndent())
-            checkStatement.setLong(1, userId)
-            checkStatement.setString(2, word)
-            val checkResultSet = checkStatement.executeQuery()
+            val sql = """
+            INSERT INTO user_answers (user_id, word_id, correct_answer_count)
+            VALUES (?, (SELECT id FROM words WHERE text = ?), ?)
+            ON CONFLICT(user_id, word_id) DO UPDATE SET correct_answer_count = ?
+        """.trimIndent()
 
-            if (checkResultSet.next()) {
-                val currentCount = checkResultSet.getInt("correct_answer_count")
-
-                val newCount = if (correctAnswersCount != 0) {
-                    if (currentCount < 3) currentCount + 1 else currentCount
-                } else {
-                    currentCount
-                }
-                val updateStatement = connection.prepareStatement("""
-                    UPDATE user_answers 
-                    SET correct_answer_count = ? 
-                    WHERE user_id = ? AND word_id = (SELECT id FROM words WHERE text = ?)
-                """.trimIndent())
-                updateStatement.setInt(1, newCount)
-                updateStatement.setLong(2, userId)
-                updateStatement.setString(3, word)
-                val rows = updateStatement.executeUpdate()
+            connection.prepareStatement(sql).use { stmt ->
+                stmt.setLong(1, userId)
+                stmt.setString(2, word)
+                stmt.setInt(3, correctAnswersCount)
+                stmt.setInt(4, correctAnswersCount)
+                val rows = stmt.executeUpdate()
                 if (rows > 0) {
-                    println("Количество правильных ответов для слова '$word' обновлено до $newCount.")
+                    println("Обновлено/вставлено: '$word' -> корректный ответ: $correctAnswersCount")
                 } else {
-                    println("Не удалось обновить записи для слова '$word' для пользователя с ID $userId.")
+                    println("Не удалось обновить или вставить запись для слова '$word'")
                 }
-                updateStatement.close()
-            } else {
-                val wordIdStatement = connection.prepareStatement("""
-                    SELECT id FROM words WHERE text = ?""")
-                wordIdStatement.setString(1, word)
-                val wordIdResultSet = wordIdStatement.executeQuery()
-                if (wordIdResultSet.next()) {
-                    val wordId = wordIdResultSet.getLong("id")
-                    val newCountToInsert: Int = (if (correctAnswersCount != 0) 1 else null)!!
-                    val insertStatement = connection.prepareStatement("""
-                    INSERT INTO user_answers (user_id, word_id, correct_answer_count) 
-                    VALUES (?, ?, ?)
-                """.trimIndent())
-                    insertStatement.setLong(1, userId)
-                    insertStatement.setLong(2, wordId)
-                    insertStatement.setInt(3, newCountToInsert)
-                    insertStatement.executeUpdate()
-                    println("Новая запись создана для слова '$word' с количеством правильных ответов: $newCountToInsert.")
-                    insertStatement.close()
-                } else {
-                    println("Слово '$word' не найдено в таблице слов.")
-                }
-                wordIdResultSet.close()
-                wordIdStatement.close()
             }
-            checkResultSet.close()
-            checkStatement.close()
         }
     }
 
