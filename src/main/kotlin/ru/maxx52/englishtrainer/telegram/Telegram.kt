@@ -12,16 +12,18 @@ fun main(args: Array<String>) = runBlocking {
     val botToken = args[0]
     val service = TelegramBotService(botToken)
     val trainers = HashMap<Long, LearnWordsTrainer>()
-    val dictionary: IUserDictionary = DatabaseUserDictionary()
+    val databaseUserDictionary = DatabaseUserDictionary()
     var lastUpdateId = 0L
 
-    while (true) {
-        delay(TIME_UPDATE)
-        val updates: TelegramUpdates = service.getUpdates(lastUpdateId)
-        if (updates.result.isEmpty()) continue
-        val sortedUpdates = updates.result.sortedBy { it.updateId }
-        sortedUpdates.forEach { handleUpdate(it, service, trainers, dictionary) }
-        lastUpdateId = sortedUpdates.last().updateId + 1
+    databaseUserDictionary.use { dictionary ->
+        while (true) {
+            delay(TIME_UPDATE)
+            val updates: TelegramUpdates = service.getUpdates(lastUpdateId)
+            if (updates.result.isEmpty()) continue
+            val sortedUpdates = updates.result.sortedBy { it.updateId }
+            sortedUpdates.forEach { handleUpdate(it, service, trainers, dictionary) }
+            lastUpdateId = sortedUpdates.last().updateId + 1
+        }
     }
 }
 

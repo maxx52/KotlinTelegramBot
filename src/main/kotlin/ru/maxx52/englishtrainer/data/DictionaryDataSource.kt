@@ -26,13 +26,13 @@ fun createTables(connection: Connection) {
         );
     """.trimIndent())
 
-    connection.createStatement().executeUpdate("""
-            CREATE TABLE IF NOT EXISTS 'user_answers' (
-              'user_id' INTEGER,
-              'word_id' INTEGER,
-              'correct_answer_count' INTEGER,
-               PRIMARY KEY (user_id, word_id)
-            );
+    connection.createStatement().executeUpdate("""            
+            CREATE TABLE IF NOT EXISTS user_answers (
+            user_id INTEGER,
+            word_id INTEGER,
+            correct_answer_count INTEGER,
+            updated_at TIMESTAMP,
+            PRIMARY KEY (user_id, word_id));
         """.trimIndent())
     println("Таблицы успешно созданы.")
     updateDictionary(fileName)
