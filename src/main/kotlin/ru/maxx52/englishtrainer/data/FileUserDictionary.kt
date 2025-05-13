@@ -8,7 +8,7 @@ const val DEFAULT_FILE_NAME = "words.txt"
 
 class FileUserDictionary(
     private val fileName: String = DEFAULT_FILE_NAME,
-    private val learnedAnswerCount: Int = DEFAULT_LEARNING_WORDS
+    private val learnedAnswerCount: Int = 0
 ) : IUserDictionary {
 
     private val dictionary = try {
