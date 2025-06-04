@@ -1,5 +1,6 @@
 package ru.maxx52.englishtrainer.console
 
+import ru.maxx52.englishtrainer.data.FileUserDictionary
 import ru.maxx52.englishtrainer.trainer.LearnWordsTrainer
 import ru.maxx52.englishtrainer.trainer.model.Question
 import ru.maxx52.englishtrainer.trainer.model.Word
@@ -19,7 +20,8 @@ fun Question.asConsoleString(): String {
 
 fun main() {
     val trainer = try {
-        LearnWordsTrainer()
+        val dictionary = FileUserDictionary()
+        LearnWordsTrainer(userId = 0, dictionary)
     } catch (_: Exception) {
         println("Невозможно загрузить словарь")
         return
@@ -34,31 +36,31 @@ fun main() {
         try {
             when (getUserInput()) {
                 1 -> {
-                    val question = trainer.getNextQuestion()
-                    println("Выбран пункт меню \"Учить слова\"")
+                    while (true) {
+                        val question = trainer.getNextQuestion()
 
-                    if (question == null) {
-                        println("Все слова в словаре выучены")
-                        continue
-                    } else {
-                        println("-------------")
-                        println(question.asConsoleString())
-
-                        val userAnswerInput = readln().toIntOrNull()
-                        if (userAnswerInput == 0) continue
-
-                        if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
-                            println("Правильно!\n")
-                            trainer.saveDictionary()
+                        if (question == null) {
+                            println("Все слова в словаре выучены")
+                            continue
                         } else {
-                            println("Неправильно! ${question.correctAnswer.questionWord} - это ${question.correctAnswer.translate}")
+                            println("-------------")
+                            println(question.asConsoleString())
+
+                            val userAnswerInput = readln().toIntOrNull()
+                            if (userAnswerInput == 0) break
+
+                            if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
+                                println("Правильно!\n")
+                            } else {
+                                println("Неправильно! ${question.correctAnswer.questionWord} - это ${question.correctAnswer.translate}")
+                            }
                         }
                     }
                 }
                 2 -> {
                     println("Выбран пункт меню \"Статистика\"")
                     val statistics = trainer.getStatistics()
-                    println("Выучено ${statistics.learnedCount.size} из ${statistics.totalCount} слов | ${statistics.percent} %")
+                    println("Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent} %")
                 }
                 0 -> {
                     println("Выход из программы")
